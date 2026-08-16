@@ -25,7 +25,14 @@ if [ ! -d /etc/letsencrypt/live/$DOMAIN ]; then
 fi
 
 # --- app ---
+mkdir -p /srv/opensandbox-volumes
 docker compose up -d --build
+
+# Pre-pull sandbox images so the first user does not wait on a registry pull.
+for image in opensandbox/execd:v1.0.22 opensandbox/egress:v1.1.6 \
+             opensandbox/code-interpreter:v1.1.0 python:3.12-slim; do
+  docker image inspect "$image" >/dev/null 2>&1 || docker pull -q "$image"
+done
 docker image prune -f >/dev/null
 
 # --- verify: fail the deploy if the API is not actually answering ---

@@ -10,6 +10,7 @@ services:
     network_mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /srv/opensandbox-volumes:/srv/opensandbox-volumes
       - ./config.toml:/etc/opensandbox/config.toml:ro
       - osb-data:/data
     environment:

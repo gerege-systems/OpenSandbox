@@ -19,6 +19,9 @@ execd_image = "opensandbox/execd:v1.0.22"
 network_mode = "bridge"
 port_range_min = 40000
 port_range_max = 41000
+# SYS_ADMIN stays dropped here. Sandboxes that need bwrap isolation sessions opt
+# in per request with extensions={"bootstrap.execd.isolation": "enable"}, which
+# makes the server add the capability for that one container only.
 drop_capabilities = ["AUDIT_WRITE", "MKNOD", "NET_ADMIN", "NET_RAW", "SYS_ADMIN", "SYS_MODULE", "SYS_PTRACE", "SYS_TIME", "SYS_TTY_CONFIG"]
 no_new_privileges = true
 pids_limit = 4096
@@ -28,6 +31,11 @@ mode = "direct"
 
 [egress]
 image = "opensandbox/egress:v1.1.6"
+
+[storage]
+# Host bind mounts are rejected unless the path sits under one of these prefixes.
+# Used by the open.gerege.mn volume demo.
+allowed_host_paths = ["/srv/opensandbox-volumes"]
 
 [store]
 path = "/data/opensandbox.db"
