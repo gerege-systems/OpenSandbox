@@ -29,13 +29,20 @@ docker compose up -d --build
 docker image prune -f >/dev/null
 
 # --- verify: fail the deploy if the API is not actually answering ---
+ok=
 for i in $(seq 30); do
-  if curl -fsS --max-time 5 https://$DOMAIN/health >/dev/null; then
-    echo "deploy ok: https://$DOMAIN/health"
-    exit 0
-  fi
+  if curl -fsS --max-time 5 https://$DOMAIN/health >/dev/null; then ok=1; break; fi
   sleep 2
 done
-echo "health check failed after 60s" >&2
-docker compose logs --tail=50 server >&2
-exit 1
+[ -n "$ok" ] || { echo "health check failed after 60s" >&2; docker compose logs --tail=50 server >&2; exit 1; }
+
+# smoke test: a real sandbox must come up through TLS + auth, then be removed
+. ./.env
+smoke() { curl -fsS --max-time 120 -H "OPEN-SANDBOX-API-KEY: $OPENSANDBOX_SERVER_API_KEY" "$@"; }
+sid=$(smoke -X POST https://$DOMAIN/sandboxes -H 'Content-Type: application/json' \
+  -d '{"image":{"uri":"python:3.12-slim"},"entrypoint":["sleep","60"],"timeout":60,"resourceLimits":{"cpu":"1","memory":"512Mi"}}' \
+  | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+[ -n "$sid" ] || { echo "smoke test: sandbox create failed" >&2; exit 1; }
+smoke -X DELETE "https://$DOMAIN/sandboxes/$sid" >/dev/null
+
+echo "deploy ok: https://$DOMAIN (health + sandbox smoke test passed)"

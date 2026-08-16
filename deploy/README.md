@@ -34,3 +34,16 @@ osb config set connection.domain osb.gerege.mn
 osb config set connection.protocol https
 osb config set connection.api_key <OPENSANDBOX_SERVER_API_KEY>
 ```
+
+**SDK clients must use server-proxy mode.** TLS terminates at nginx on 443 only;
+the sandbox ports (`40000-41000`) speak plain HTTP, so a `protocol="https"`
+client fails direct endpoint access with `SSL: WRONG_VERSION_NUMBER`. Route
+sandbox traffic through the lifecycle API instead:
+
+```python
+ConnectionConfig(domain="osb.gerege.mn", protocol="https",
+                 api_key=..., use_server_proxy=True)
+```
+
+The `40000-41000` range stays open for services a sandbox exposes itself
+(VNC, code-server, Chrome DevTools) — those are **plain HTTP/TCP, no TLS**.
