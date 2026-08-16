@@ -31,6 +31,9 @@ mode = "direct"
 
 [egress]
 image = "opensandbox/egress:v1.1.6"
+# dns+nft (not plain dns) is required by credentialProxy.enabled, and it is what
+# makes CIDR/IP egress rules actually enforceable rather than DNS-only.
+mode = "dns+nft"
 
 [storage]
 # Host bind mounts are rejected unless the path sits under one of these prefixes.
