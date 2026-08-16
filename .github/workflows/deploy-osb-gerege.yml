@@ -1,0 +1,37 @@
+name: Deploy osb.gerege.mn
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'deploy/**'
+      - '.github/workflows/deploy-osb-gerege.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-osb-gerege
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # fork-only: never runs if this workflow ends up upstream
+    if: github.repository == 'gerege-systems/OpenSandbox'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -o BatchMode=yes root@"$HOST" '
+            set -euo pipefail
+            cd /opt/opensandbox
+            git fetch --prune origin main
+            git reset --hard origin/main
+            bash deploy/deploy.sh
+          '

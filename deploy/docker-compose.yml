@@ -1,0 +1,28 @@
+services:
+  server:
+    build:
+      context: ../server
+    image: osb-gerege/server:latest
+    container_name: opensandbox-server
+    restart: unless-stopped
+    # host networking: server binds 127.0.0.1:8090 (nginx fronts it) and reaches
+    # sandbox host-mapped ports directly, so no host_ip rewriting is needed.
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config.toml:/etc/opensandbox/config.toml:ro
+      - osb-data:/data
+    environment:
+      - OPENSANDBOX_SERVER_API_KEY=${OPENSANDBOX_SERVER_API_KEY:?set in deploy/.env}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8090/health').read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options: {max-size: "50m", max-file: "3"}
+
+volumes:
+  osb-data:

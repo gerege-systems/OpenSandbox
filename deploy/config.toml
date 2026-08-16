@@ -1,0 +1,33 @@
+# OpenSandbox server config for osb.gerege.mn (single-node Docker runtime).
+# Secrets are NOT here: the API key comes from OPENSANDBOX_SERVER_API_KEY (deploy/.env).
+
+[server]
+# Container runs with network_mode: host; nginx terminates TLS and proxies here.
+host = "127.0.0.1"
+port = 8090
+# Host part of sandbox endpoint URLs returned to SDK clients.
+eip = "osb.gerege.mn"
+
+[log]
+level = "INFO"
+
+[runtime]
+type = "docker"
+execd_image = "opensandbox/execd:v1.0.22"
+
+[docker]
+network_mode = "bridge"
+port_range_min = 40000
+port_range_max = 41000
+drop_capabilities = ["AUDIT_WRITE", "MKNOD", "NET_ADMIN", "NET_RAW", "SYS_ADMIN", "SYS_MODULE", "SYS_PTRACE", "SYS_TIME", "SYS_TTY_CONFIG"]
+no_new_privileges = true
+pids_limit = 4096
+
+[ingress]
+mode = "direct"
+
+[egress]
+image = "opensandbox/egress:v1.1.6"
+
+[store]
+path = "/data/opensandbox.db"
