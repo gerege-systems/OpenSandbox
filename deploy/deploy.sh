@@ -26,6 +26,8 @@ fi
 
 # --- app ---
 mkdir -p /srv/opensandbox-volumes
+CONFIG_SHA="$(sha256sum config.toml | cut -c1-12)"
+export CONFIG_SHA
 docker compose up -d --build
 
 # Pre-pull sandbox images so the first user does not wait on a registry pull.

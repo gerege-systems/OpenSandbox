@@ -15,6 +15,10 @@ services:
       - osb-data:/data
     environment:
       - OPENSANDBOX_SERVER_API_KEY=${OPENSANDBOX_SERVER_API_KEY:?set in deploy/.env}
+      # config.toml is a bind mount, so editing it does not change the service
+      # spec and compose would leave the old process running with the old file.
+      # Feeding its checksum in makes a config change recreate the container.
+      - CONFIG_SHA=${CONFIG_SHA:-unset}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8090/health').read()"]
       interval: 30s
